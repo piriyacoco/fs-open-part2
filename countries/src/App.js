@@ -1,6 +1,22 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
+const DisplayCountry = ({country}) => {
+  return (
+    <>
+      <h1>{country.name.common}</h1>
+      capital {country.capital}
+      <br/>
+      area {country.area}
+      <h2>languages:</h2>
+      <ul>
+        {Object.values(country.languages).map(item => <li>{item}</li>)}
+      </ul>
+      <img src={country.flags.png}/>
+    </>
+    )
+}
+
 const App = () => {
 
   const [countries, setCountries] = useState([
@@ -32,30 +48,27 @@ const App = () => {
     :
     countriesToShow
 
+  const [showCountries, setShowCountries] = useState([])
+
+  // <DisplayCountry country={country} />
+
+  console.log(showCountries)
+
   return (
     <>
     find countries <input value={filter} onChange={handleChangeFilter} />
     <br/>
-    {limitCountriesToShow.map(country => <>{country.name.common}<br/></>)}
+    {limitCountriesToShow.map(country => <>{country.name.common}<button onClick={() => setShowCountries(showCountries.concat(country))}>show</button><br/></>)}
+    {showCountries.map(country => <DisplayCountry country={country} />)}
     {
-      ((countriesToShow.length > 10) && filter !== '') ? 
+      ((countriesToShow.length > 10) && (filter !== '')) ? 
         <>Too many matches, specify another filter</> 
         : 
         <></>
     }
     {
-      (countriesToShow.length === 1) ?
-        <>
-        <h1>{countriesToShow[0].name.common}</h1>
-        capital {countriesToShow[0].capital}
-        <br/>
-        area {countriesToShow[0].area}
-        <h2>languages:</h2>
-        <ul>
-          {Object.values(countriesToShow[0].languages).map(item => <li>{item}</li>)}
-        </ul>
-        <img src={countriesToShow[0].flags.png}/>
-        </>
+      ((countriesToShow.length === 1)  && (filter !== '')) ?
+        <DisplayCountry country={countriesToShow[0]} />
         :
         <></>
     }
