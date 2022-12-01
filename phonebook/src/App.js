@@ -71,7 +71,12 @@ const App = () => {
   const handleSubmit = (event) => {
     event.preventDefault()
     const newPerson = { name: newName, number: newNumber }
-    const id = persons.find(person => person.name === newPerson.name).id
+
+    const id = persons.map(person => person.name).includes(newName) ?
+      persons.find(person => person.name === newPerson.name).id
+      : 
+      -1
+      
     {
       persons.map(person => person.name).includes(newName) ?
         phonebookService
