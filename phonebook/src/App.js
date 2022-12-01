@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
+import phonebookService from './services/phonebooks'
+
 const Filter = ({filter, handleChangeFilter}) => {
   return (
     <>
@@ -25,10 +27,10 @@ const PersonForm = ({handleSubmit, newName, handleChangeName, newNumber, handleC
   )
 }
 
-const Persons = ({personsToShow}) => {
+const Persons = ({personsToShow, persons, setPersons}) => {
   return (
     <>
-    {personsToShow.map(person => <>{person.name} {person.number}<br/></>)}
+    {personsToShow.map(person => <>{person.name} {person.number}<button onClick={() => phonebookService.personDelete(person).then(setPersons(persons.filter(item => item.id !== person.id)))}> delete </button><br/></>)}
     </>
   )
 }
@@ -42,10 +44,10 @@ const App = () => {
   ])
 
   useEffect(() => {
-    axios
-      .get('http://localhost:3001/persons')
+    phonebookService
+      .getAll()
       .then(response => {
-        setPersons(response.data)
+        setPersons(response)
       })
   }, [])
 
@@ -69,11 +71,21 @@ const App = () => {
   const handleSubmit = (event) => {
     event.preventDefault()
     const newPerson = { name: newName, number: newNumber }
+    const id = persons.find(person => person.name === newPerson.name).id
     {
       persons.map(person => person.name).includes(newName) ?
-        window.alert(`${newName} is already added to phonebook`)
+        phonebookService
+          .update(id, newPerson)
+          .then(
+            setPersons(persons.filter(person => person.name !== newName).concat(newPerson))
+            )
         :
-        setPersons(persons.concat(newPerson))
+        //setPersons(persons.concat(newPerson))
+        phonebookService
+          .create(newPerson)
+          .then(
+            setPersons(persons.concat(newPerson))
+            )
     }
     setNewName('')
     setNewNumber('')
@@ -108,7 +120,7 @@ const App = () => {
       
       <h3>Numbers</h3>
       
-      <Persons personsToShow={personsToShow} />
+      <Persons personsToShow={personsToShow} persons={persons} setPersons={setPersons} />
     </div>
   )
 }
