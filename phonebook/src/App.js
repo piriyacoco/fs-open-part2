@@ -27,10 +27,15 @@ const PersonForm = ({handleSubmit, newName, handleChangeName, newNumber, handleC
   )
 }
 
-const Persons = ({personsToShow, persons, setPersons}) => {
+const Persons = ({personsToShow, persons, setPersons, setErrorMessage}) => {
   return (
     <>
-    {personsToShow.map(person => <>{person.name} {person.number}<button onClick={() => phonebookService.personDelete(person).then(setPersons(persons.filter(item => item.id !== person.id)))}> delete </button><br/></>)}
+    {personsToShow.map(person => <>{person.name} {person.number}<button onClick={
+      () => 
+      phonebookService
+        .personDelete(person)
+        .then(setPersons(persons.filter(item => item.id !== person.id)))
+      }> delete </button><br/></>)}
     </>
   )
 }
@@ -56,6 +61,8 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [filter, setFilter] = useState('')
+  const [confirmMessage, setConfirmMessage] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
 
 
   const handleChangeName = (event) => {
@@ -76,7 +83,7 @@ const App = () => {
       persons.find(person => person.name === newPerson.name).id
       : 
       -1
-      
+
     {
       persons.map(person => person.name).includes(newName) ?
         phonebookService
@@ -84,12 +91,27 @@ const App = () => {
           .then(
             setPersons(persons.filter(person => person.name !== newName).concat(newPerson))
             )
+          .catch(error => {
+            setPersons(persons.filter(person => person.name !== newName))
+            setErrorMessage(`Information of ${newPerson.name} has already been removed from server`)
+            setTimeout(() => {
+              setErrorMessage('')
+            }, 5000)
+          })
         :
         //setPersons(persons.concat(newPerson))
         phonebookService
           .create(newPerson)
           .then(
             setPersons(persons.concat(newPerson))
+            )
+          .then(
+            setConfirmMessage(`Added ${newPerson.name}`)
+          )
+          .then(
+            setTimeout(() => {
+                setConfirmMessage('')
+              }, 5000)
             )
     }
     setNewName('')
@@ -110,6 +132,9 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+
+      {confirmMessage !== '' ? <div className='confirm'>{confirmMessage}</div> : null}
+      {errorMessage !== '' ? <div className='error'>{errorMessage}</div> : null}
       
       <Filter filter={filter} handleChangeFilter={handleChangeFilter} />
       
@@ -125,7 +150,7 @@ const App = () => {
       
       <h3>Numbers</h3>
       
-      <Persons personsToShow={personsToShow} persons={persons} setPersons={setPersons} />
+      <Persons personsToShow={personsToShow} persons={persons} setPersons={setPersons} setErrorMessage={setErrorMessage} />
     </div>
   )
 }
