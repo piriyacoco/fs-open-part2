@@ -27,7 +27,7 @@ const PersonForm = ({handleSubmit, newName, handleChangeName, newNumber, handleC
   )
 }
 
-const Persons = ({personsToShow, persons, setPersons, setErrorMessage}) => {
+const Persons = ({personsToShow, persons, setPersons}) => {
   return (
     <>
     {personsToShow.map(person => <>{person.name} {person.number}<button onClick={
@@ -61,8 +61,9 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [filter, setFilter] = useState('')
-  const [confirmMessage, setConfirmMessage] = useState('')
-  const [errorMessage, setErrorMessage] = useState('')
+
+  const [message, setMessage] = useState('')
+  const [confirm, setConfirm] = useState(true)
 
 
   const handleChangeName = (event) => {
@@ -93,9 +94,10 @@ const App = () => {
             )
           .catch(error => {
             setPersons(persons.filter(person => person.name !== newName))
-            setErrorMessage(`Information of ${newPerson.name} has already been removed from server`)
+            setConfirm(false)
+            setMessage(`Information of ${newPerson.name} has already been removed from server`)
             setTimeout(() => {
-              setErrorMessage('')
+              setMessage('')
             }, 5000)
           })
         :
@@ -103,16 +105,24 @@ const App = () => {
         phonebookService
           .create(newPerson)
           .then(
-            setPersons(persons.concat(newPerson))
-            )
-          .then(
-            setConfirmMessage(`Added ${newPerson.name}`)
-          )
-          .then(
-            setTimeout(() => {
-                setConfirmMessage('')
+            response => {
+              setPersons(persons.concat(newPerson))
+              setConfirm(true)
+              setMessage(`Added ${newPerson.name}`)
+              setTimeout(() => {
+                setMessage('')
               }, 5000)
-            )
+            }
+          )
+          .catch(error => {
+            console.log(error.response.data.error)
+            setPersons(persons.filter(person => person.name !== newName))
+            setConfirm(false)
+            setMessage(`Person validation failed: name: Path name (${newPerson.name}) is shorter than the minimum allowed length (3)`)
+            setTimeout(() => {
+              setMessage('')
+            }, 5000)
+          })
     }
     setNewName('')
     setNewNumber('')
@@ -133,8 +143,7 @@ const App = () => {
     <div>
       <h2>Phonebook</h2>
 
-      {confirmMessage !== '' ? <div className='confirm'>{confirmMessage}</div> : null}
-      {errorMessage !== '' ? <div className='error'>{errorMessage}</div> : null}
+      {message !== '' ? <div className={confirm ? 'confirm' : 'error'}>{message}</div> : null}
       
       <Filter filter={filter} handleChangeFilter={handleChangeFilter} />
       
@@ -150,7 +159,7 @@ const App = () => {
       
       <h3>Numbers</h3>
       
-      <Persons personsToShow={personsToShow} persons={persons} setPersons={setPersons} setErrorMessage={setErrorMessage} />
+      <Persons personsToShow={personsToShow} persons={persons} setPersons={setPersons} />
     </div>
   )
 }
